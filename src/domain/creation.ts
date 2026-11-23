@@ -3,7 +3,7 @@
  * Pure functions only — every function returns a new Character.
  */
 import { getClass } from './data/classes'
-import { rollDice } from './dice'
+import { diceRange, rollDice } from './dice'
 import {
   CHARACTER_SCHEMA_VERSION,
   type Character,
@@ -52,6 +52,42 @@ export function rollBaseSaves(rng: Rng = Math.random): Saves {
     mind: rollDice(SAVE_DICE, rng),
     spirit: rollDice(SAVE_DICE, rng),
   }
+}
+
+// ---------------------------------------------------------------------------
+// Manual entry (players transcribing physical dice)
+// ---------------------------------------------------------------------------
+
+/** Attribute values being filled in during creation; `null` = not yet rolled/entered. */
+export type AttributeDraft<K extends string> = Record<K, number | null>
+
+export const EMPTY_STATS_DRAFT: AttributeDraft<StatKey> = { strength: null, intellect: null, will: null }
+export const EMPTY_SAVES_DRAFT: AttributeDraft<SaveKey> = { body: null, mind: null, spirit: null }
+
+/**
+ * Parses a manually entered dice total. Returns `null` unless the text is a
+ * whole number reachable by `dice` (e.g. 6–60 for 6d10).
+ */
+export function parseAttributeEntry(raw: string, dice: DiceExpression): number | null {
+  const text = raw.trim()
+  if (!/^\d+$/.test(text)) return null
+  const value = Number(text)
+  const { min, max } = diceRange(dice)
+  return value >= min && value <= max ? value : null
+}
+
+/** Returns the completed record once every key has a value, else `null`. */
+export function completeDraft<K extends string>(
+  draft: AttributeDraft<K>,
+  keys: readonly K[],
+): Record<K, number> | null {
+  const result = {} as Record<K, number>
+  for (const key of keys) {
+    const value = draft[key]
+    if (value === null) return null
+    result[key] = value
+  }
+  return result
 }
 
 // ---------------------------------------------------------------------------
@@ -106,11 +142,20 @@ export interface NewCharacterOptions {
 
 /** Creates a classless character with freshly rolled base stats and saves. */
 export function createCharacter(
-  { id, name = '' }: NewCharacterOptions,
+  options: NewCharacterOptions,
   rng: Rng = Math.random,
 ): Character {
   const baseStats = rollBaseStats(rng)
   const baseSaves = rollBaseSaves(rng)
+  return createCharacterFromBase(options, baseStats, baseSaves)
+}
+
+/** Creates a classless character from base values already rolled or entered by hand. */
+export function createCharacterFromBase(
+  { id, name = '' }: NewCharacterOptions,
+  baseStats: Stats,
+  baseSaves: Saves,
+): Character {
   return recomputeAttributes({
     schemaVersion: CHARACTER_SCHEMA_VERSION,
     id,

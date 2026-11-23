@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { rollDice, rollDiceFaces, rollDie } from './dice'
+import { diceRange, formatDice, rollDice, rollDiceFaces, rollDie } from './dice'
 import { constantRng, facesRng, seededRng } from './testing/rng'
 
 describe('rollDie', () => {
@@ -58,5 +58,13 @@ describe('rollDice', () => {
   it('returns 0 for zero dice and rejects negative counts', () => {
     expect(rollDice({ count: 0, sides: 10 })).toBe(0)
     expect(() => rollDice({ count: -1, sides: 10 })).toThrow(RangeError)
+  })
+})
+
+describe('diceRange / formatDice', () => {
+  it('reports inclusive totals and NdS notation', () => {
+    expect(diceRange({ count: 6, sides: 10 })).toEqual({ min: 6, max: 60 })
+    expect(diceRange({ count: 5, sides: 10 })).toEqual({ min: 5, max: 50 })
+    expect(formatDice({ count: 6, sides: 10 })).toBe('6d10')
   })
 })

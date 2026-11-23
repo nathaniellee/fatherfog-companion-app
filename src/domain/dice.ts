@@ -20,6 +20,16 @@ export function rollDiceFaces({ count, sides }: DiceExpression, rng: Rng = Math.
   return Array.from({ length: count }, () => rollDie(sides, rng))
 }
 
+/** Inclusive min/max total for a dice expression (e.g. `6d10` → 6–60). */
+export function diceRange({ count, sides }: DiceExpression): { min: number; max: number } {
+  return { min: count, max: count * sides }
+}
+
+/** Formats a dice expression as `NdS`. */
+export function formatDice({ count, sides }: DiceExpression): string {
+  return `${count}d${sides}`
+}
+
 /** Rolls a dice expression (e.g. `6d10`) and returns the sum. */
 export function rollDice(expression: DiceExpression, rng: Rng = Math.random): number {
   return rollDiceFaces(expression, rng).reduce((sum, face) => sum + face, 0)
