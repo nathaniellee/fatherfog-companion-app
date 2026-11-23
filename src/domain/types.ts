@@ -239,7 +239,8 @@ export type ClassId = 'worker' | 'philosopher' | 'stranger' | 'hunter'
 
 export interface ClassTrait {
   name: string
-  description: string
+  /** Rules text. Omitted where docs/SPEC.md gives only the trait name. */
+  description?: string
 }
 
 /** A "choose exactly one" starting-skill slot. */
